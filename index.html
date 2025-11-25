@@ -504,6 +504,12 @@
             margin: 15px 0;
             border: 1px solid var(--cinza);
         }
+
+        /* Loading */
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
@@ -724,6 +730,9 @@
                     <!-- Lista de Conteúdo Existente -->
                     <div class="admin-card">
                         <h3>📋 Conteúdo Existente</h3>
+                        <button class="btn btn-secondary btn-small" onclick="carregarFilmesCompartilhados()" style="margin-bottom: 15px;">
+                            🔄 Atualizar Catálogo
+                        </button>
                         <div id="adminVideosList"></div>
                     </div>
                 </div>
@@ -1125,6 +1134,7 @@
                     }
                     
                     loadSeriesForEpisodes();
+                    showSuccess(`✅ Catálogo atualizado! ${videos.length} filmes e ${series.length} séries.`);
                     return true;
                 } else {
                     throw new Error('Arquivo não encontrado');
@@ -1144,6 +1154,7 @@
                     videos = dados.filter(item => item.type !== 'serie');
                     series = dados.filter(item => item.type === 'serie');
                     console.log(`📁 ${videos.length} filmes e ${series.length} séries do backup local`);
+                    showSuccess(`📁 Catálogo local carregado: ${videos.length} filmes e ${series.length} séries.`);
                     return true;
                 }
             } catch (e) {
@@ -1152,6 +1163,7 @@
             
             videos = [];
             series = [];
+            showSuccess('📝 Catálogo vazio. Adicione alguns filmes ou séries!');
             return false;
         }
 
@@ -1206,6 +1218,16 @@
                 conteudoParaMostrar = conteudoParaMostrar.filter(item => item.itemType === 'serie');
             }
             
+            if (conteudoParaMostrar.length === 0) {
+                container.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--cinza-claro);">
+                        <h3>📭 Nenhum conteúdo encontrado</h3>
+                        <p>Use os filtros ou adicione alguns filmes/séries na área administrativa.</p>
+                    </div>
+                `;
+                return;
+            }
+            
             container.innerHTML = conteudoParaMostrar.map(item => `
                 <div class="video-card poster" onclick="${item.itemType === 'serie' ? `showSeriesEpisodes('${item.id}')` : `playVideo('${item.driveId}')`}">
                     <img src="${item.poster}" alt="${item.title}" onerror="this.src='https://via.placeholder.com/500x750/333333/FFFFFF?text=${encodeURIComponent(item.title.substring(0, 15))}'">
@@ -1228,6 +1250,11 @@
         function loadAdminVideos() {
             const container = document.getElementById('adminVideosList');
             const todosOsItens = [...videos, ...series];
+            
+            if (todosOsItens.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--cinza-claro);">Nenhum conteúdo cadastrado ainda.</p>';
+                return;
+            }
             
             container.innerHTML = todosOsItens.map(item => `
                 <div style="background: var(--preto); padding: 15px; margin: 10px 0; border-radius: 5px; border: 1px solid var(--cinza);">
